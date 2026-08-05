@@ -11,14 +11,15 @@ export default function AddProblemPage() {
     tags: '',
     testCases: [{ input: '', output: '' }]
   });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Check if current user is admin
+  // Check if current user is admin (client-side redirect for UX only —
+  // the real enforcement happens server-side in /api/problems/create).
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    // We'll also verify this on the backend for real security
-    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-       // Note: process.env.NEXT_PUBLIC is needed to see it on frontend
-       router.push('/'); 
+    if (user.role !== 'admin') {
+       router.push('/');
     }
   }, []);
 
@@ -48,6 +49,19 @@ export default function AddProblemPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+      setError("");
+
+      if (!formData.title.trim() || !formData.description.trim()) {
+        setError("Title and description are required.");
+        return;
+      }
+      if (formData.testCases.some(tc => !tc.input.trim() && !tc.output.trim())) {
+        // input can legitimately be empty for some problems, but output can't
+      }
+      if (formData.testCases.some(tc => !tc.output.trim())) {
+        setError("Every test case needs a non-empty expected output.");
+        return;
+      }
 
       // Convert the string into an array of trimmed tags
       const tagsArray = formData.tags
@@ -60,15 +74,27 @@ export default function AddProblemPage() {
         tags: tagsArray // Replace string with the new array
       };
 
-      const res = await fetch('/api/problems/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
-      });
+      setIsSubmitting(true);
+      try {
+        const res = await fetch('/api/problems/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submissionData),
+        });
 
-      if (res.ok) {
-        alert("Problem initialized in Database!");
-        router.push('/problems');
+        const data = await res.json().catch(() => null);
+
+        if (res.ok && data?.success) {
+          router.push('/problems');
+        } else {
+          // The old version silently did nothing on failure — surface the
+          // actual error instead.
+          setError(data?.message || `Failed to create problem (status ${res.status}).`);
+        }
+      } catch (err) {
+        setError("Network error. Please try again.");
+      } finally {
+        setIsSubmitting(false);
       }
     };
   const gotohome=async()=>{
@@ -85,10 +111,16 @@ export default function AddProblemPage() {
       <h1 className="text-3xl font-black mb-8 text-blue-500 tracking-tighter uppercase mx-auto w-[75%]">{"$"} System --push-challenge</h1>
       
       <form onSubmit={handleSubmit} className="mx-auto w-[75%] space-y-8 bg-zinc-900/30 p-8 rounded-3xl border border-zinc-800">
+        {error && (
+          <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold rounded-xl uppercase tracking-widest">
+            {error}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Problem Title</label>
             <input 
+              required
               className="w-full bg-black border border-zinc-800 rounded-xl p-4 focus:border-blue-500 outline-none"
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               placeholder="e.g. Sum of Two Integers"
@@ -111,6 +143,7 @@ export default function AddProblemPage() {
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Description (Markdown Supported)</label>
           <textarea 
             rows={6}
+            required
             className="w-full bg-black border border-zinc-800 rounded-xl p-4 focus:border-blue-500 outline-none"
             onChange={(e) => setFormData({...formData, description: e.target.value})}
           />
@@ -182,8 +215,8 @@ export default function AddProblemPage() {
             ))}
             </div>
 
-        <button type="submit" className="w-full py-4 bg-blue-600 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-blue-500 transition-all">
-          Upload to Global Problem Set
+        <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-blue-600 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-blue-500 transition-all disabled:opacity-50">
+          {isSubmitting ? "Uploading..." : "Upload to Global Problem Set"}
         </button>
       </form>
     </div>

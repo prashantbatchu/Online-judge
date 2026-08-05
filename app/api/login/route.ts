@@ -12,7 +12,7 @@ export async function POST(req: Request) {
         const { email, password } = body;
 
         // 1. Basic Validation
-        if (!email || !password) {
+        if (!email || typeof email !== "string" || !password || typeof password !== "string") {
             return NextResponse.json(
                 { success: false, message: "Terminal ID and Access Key required." }, 
                 { status: 400 }
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         }
 
         // 2. Find User
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.trim().toLowerCase() });
         if (!user) {
             return NextResponse.json(
                 { success: false, message: "Invalid credentials." }, 
@@ -37,9 +37,8 @@ export async function POST(req: Request) {
             );
         }
 
-        // 4. Establish Session
-        // Note: Make sure setCookie is compatible with API routes
-        await setCookie(user._id);
+        // 4. Establish Session (embed role so downstream routes can authorize)
+        await setCookie(user._id.toString(), user.role ?? "user");
 
         // 5. Clean response
         const userResponse = user.toObject();

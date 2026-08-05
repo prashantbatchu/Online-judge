@@ -42,14 +42,14 @@ export default function HomePage() {
 
           // Normalize tags to lowercase and trim them
           const tagsArray = Array.isArray(p.tags) 
-            ? p.tags.map(t => t.toLowerCase().trim()) 
-            : p.tags.toLowerCase().split(',').map(t => t.trim());
+            ? p.tags.map((t: string) => t.toLowerCase().trim()) 
+            : p.tags.toLowerCase().split(',').map((t: string) => t.trim());
 
           // Normalize the key to lowercase (e.g., "Strings" -> "string")
           // We also use .slice(0, -1) to match "Array" to "Arrays" if needed
           const searchKey = topic.key.toLowerCase().trim();
 
-          return tagsArray.some(tag => 
+          return tagsArray.some((tag: string) => 
             tag.includes(searchKey) || searchKey.includes(tag)
           );
         }).length;
@@ -110,7 +110,7 @@ export default function HomePage() {
               <div className="mt-6 text-blue-500 font-bold text-sm inline-flex items-center gap-2">Browse Problems <span>→</span></div>
             </Link>
 
-            <Link href="/contests" className="group relative p-8 bg-zinc-900 border border-zinc-800 rounded-3xl hover:border-purple-500/50 hover:bg-zinc-800/50 transition-all duration-300">
+            <Link href="/contest" className="group relative p-8 bg-zinc-900 border border-zinc-800 rounded-3xl hover:border-purple-500/50 hover:bg-zinc-800/50 transition-all duration-300">
               <div className="mb-6 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-500 group-hover:scale-110 transition-transform font-bold text-2xl">C</div>
               <h2 className="text-2xl font-bold mb-3">Contest Archive</h2>
               <p className="text-zinc-500 leading-relaxed text-sm">Analyze past rounds, view official editorials, and practice under real contest conditions.</p>

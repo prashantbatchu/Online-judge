@@ -16,7 +16,7 @@ export default function AddContestPage() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+    if (user.role !== "admin") {
       router.push("/");
     }
   }, []);

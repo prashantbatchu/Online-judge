@@ -6,6 +6,7 @@ import Link from "next/link";
 type TestCase = { input: string; output: string };
 type Problem = {
   _id: string;
+  number?: number;
   title: string;
   description: string;
   difficulty: "Easy" | "Medium" | "Hard";
@@ -93,7 +94,9 @@ export default function ProblemPage({
   const fetchSubmissions = () => {
     if (!problem || !user._id) return;
     setLoadingSubmissions(true);
-    fetch(`/api/submissions/${problem._id}?userId=${user._id}`)
+    // userId is derived server-side from the session cookie now — no need
+    // (and no ability) to pass someone else's id here.
+    fetch(`/api/submissions/${problem._id}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success) setSubmissions(data.submissions);
@@ -119,6 +122,10 @@ export default function ProblemPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language, code, stdin: customInput }),
       });
+      if (res.status === 401) {
+        setRunOutput("Please log in to run code.");
+        return;
+      }
       const data = await res.json();
       const out =
         data.stdout || data.stderr || data.exception || "No output.";
@@ -144,13 +151,18 @@ export default function ProblemPage({
       const res = await fetch("/api/submissions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // No userId here — the server derives the submitter from the
+        // session cookie, so there's nothing to spoof.
         body: JSON.stringify({
           problemId: problem!._id,
-          userId: user._id,
           code,
           language,
         }),
       });
+      if (res.status === 401) {
+        setSubmitResult({ status: "Error", message: "Your session expired — please log in again." });
+        return;
+      }
       const data = await res.json();
       setSubmitResult({ status: data.status, message: data.message });
       // Refresh submissions tab
@@ -178,7 +190,7 @@ export default function ProblemPage({
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
         <p className="text-zinc-400 font-mono text-lg">
-          Problem #{id} not found.
+          Problem {problem?.number ? `#${problem.number}` : ""} not found.
         </p>
         <Link href="/problems" className="text-blue-500 text-sm hover:underline">
           ← Back to Problem Set
@@ -213,7 +225,7 @@ export default function ProblemPage({
               {/* Title + Meta */}
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-zinc-500 font-mono text-sm">#{id}</span>
+                  <span className="text-zinc-500 font-mono text-sm">#{problem.number ?? "?"}</span>
                   <span
                     className={`text-[10px] px-2 py-1 rounded-lg border font-black uppercase tracking-widest ${
                       difficultyStyle[problem.difficulty]

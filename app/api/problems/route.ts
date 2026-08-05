@@ -16,6 +16,7 @@ export async function GET() {
         });
     }
     catch (error) {
+        console.error("Fetch problems error:", error);
         return NextResponse.json(
             { success: false, message: "Failed to fetch problems" }, 
             { status: 500 }

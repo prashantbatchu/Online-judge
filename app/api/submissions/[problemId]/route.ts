@@ -2,36 +2,38 @@ import { connectDB } from "../../config/db";
 import { NextResponse } from "next/server";
 import Submission from "../../models/submission.models";
 import mongoose from "mongoose";
+import { getSessionUser } from "../../utils/auth";
 
 export async function GET(
-  req: Request, 
-  { params }: { params: Promise<{ problemId: string }> } // Define as Promise
+  req: Request,
+  { params }: { params: Promise<{ problemId: string }> }
 ) {
   try {
-    await connectDB();
-
-    // 1. UNWRAP the params first
-    const resolvedParams = await params; 
-    const problemId = resolvedParams.problemId;
-
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId || !problemId) {
-      return NextResponse.json({ success: false, message: "Required IDs missing" }, { status: 400 });
+    // Submissions are private — a user's code and status for a problem
+    // should only be visible to that user (or an admin), never fetchable
+    // for an arbitrary userId passed in the query string.
+    const sessionUser = await getSessionUser();
+    if (!sessionUser) {
+      return NextResponse.json({ success: false, message: "You must be logged in." }, { status: 401 });
     }
 
-    // 2. Now use the unwrapped string
-    const submissions = await Submission.find({ 
-      problem: new mongoose.Types.ObjectId(problemId), 
-      user: new mongoose.Types.ObjectId(userId) 
-    }).sort({ createdAt: -1 });
+    const resolvedParams = await params;
+    const problemId = resolvedParams.problemId;
 
-    console.log(`Found ${submissions.length} submissions for User: ${userId} and Problem: ${problemId}`);
+    if (!mongoose.Types.ObjectId.isValid(problemId)) {
+      return NextResponse.json({ success: false, message: "Invalid problem id." }, { status: 400 });
+    }
+
+    await connectDB();
+
+    const submissions = await Submission.find({
+      problem: new mongoose.Types.ObjectId(problemId),
+      user: new mongoose.Types.ObjectId(sessionUser.userId),
+    }).sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, submissions });
   } catch (error: any) {
     console.error("Submission Fetch Error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Server error." }, { status: 500 });
   }
 }

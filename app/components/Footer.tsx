@@ -24,8 +24,8 @@ const Footer = () => {
           <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-[0.2em]">Platform</h4>
           <ul className="text-zinc-500 text-sm space-y-3">
             <li className="hover:text-blue-400 cursor-pointer transition"><Link href="/problems">Problem Set</Link></li>
-            <li className="hover:text-blue-400 cursor-pointer transition"><Link href="/contests">Contest Archive</Link></li>
-            <li className="hover:text-blue-400 cursor-pointer transition">Leaderboard</li>
+            <li className="hover:text-blue-400 cursor-pointer transition"><Link href="/contest">Contest Archive</Link></li>
+            <li className="hover:text-blue-400 cursor-pointer transition"><Link href="/leaderboard">Leaderboard</Link></li>
           </ul>
         </div>
 

@@ -233,7 +233,7 @@ export default function ProfilePage() {
                   </span>
                   <span className="text-zinc-700 text-[10px]">•</span>
                   <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-tighter">
-                    Runtime: {s.runtime || 'N/A'}ms
+                    Runtime: {s.executionTime ?? 0}ms
                   </span>
                 </div>
               </div>

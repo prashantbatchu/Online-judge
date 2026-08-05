@@ -119,9 +119,14 @@ export default function ContestPage() {
       const res = await fetch(`/api/contests/${contestId}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user._id }),
+        // No body needed — the server identifies the registrant from the
+        // session cookie.
       });
       const data = await res.json();
+      if (res.status === 401) {
+        showToast("Please log in to register.", "error");
+        return;
+      }
       if (data.success) {
         setRegisteredIds((prev) => new Set([...prev, contestId]));
         showToast("Registered successfully!", "success");
@@ -178,7 +183,7 @@ export default function ContestPage() {
           </div>
 
           {/* Admin: Add Contest */}
-          {user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+          {user?.role === "admin" && (
             <Link
               href="/admin/add-contest"
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"

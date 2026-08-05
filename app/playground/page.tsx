@@ -30,6 +30,15 @@ export default function PlaygroundPage() {
         }),
       });
 
+      if (res.status === 401) {
+        setOutput("Please log in to run code in the playground.");
+        return;
+      }
+      if (res.status === 429) {
+        setOutput("You're running code too frequently — please wait a moment and try again.");
+        return;
+      }
+
       const data = await res.json();
 
       if (data.status === "success") {

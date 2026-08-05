@@ -100,6 +100,9 @@ export default function SignupPage() {
               <input 
                 type="text" 
                 name='username'
+                required
+                minLength={3}
+                maxLength={24}
                 placeholder="coder_404"
                 value={formData.username}
                 onChange={handleChange}
@@ -112,6 +115,7 @@ export default function SignupPage() {
               <input 
                 type="email" 
                 name='email'
+                required
                 placeholder="dev@bigoj.com"
                 value={formData.email}
                 onChange={handleChange}
@@ -125,6 +129,8 @@ export default function SignupPage() {
                 <input 
                   type="password" 
                   name="password" 
+                  required
+                  minLength={6}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
@@ -136,6 +142,8 @@ export default function SignupPage() {
                 <input 
                   type="password" 
                   name="confirmPassword" 
+                  required
+                  minLength={6}
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"

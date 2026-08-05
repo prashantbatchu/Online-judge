@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 const Navbar = () => {
   // Store the actual user object instead of just a boolean
-  const [user, setUser] = useState<{ username: string,email:string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email: string; role?: string } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -95,7 +95,7 @@ const Navbar = () => {
           <Link href="/playground" data-path="/playground" className="relative hover:text-white transition-colors">PLAYGROUND</Link>
           <Link href="/profile" data-path="/profile" className="relative hover:text-white transition-colors">PROFILE</Link>
           
-          {user && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+          {user && user.role === "admin" && (
             <Link
               href="/admin/add-problem"
               className="px-3 py-1 border border-blue-500/30 text-blue-500 text-[10px] font-black rounded-md hover:bg-blue-500 hover:text-white transition-all tracking-widest uppercase mt-[-4]"
